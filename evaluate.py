@@ -43,49 +43,53 @@ def gen_prompt(train_df, subject, k=-1):
         prompt += format_example(train_df, i)
     return prompt
 
-def eval(args, subject, engine, dev_df, test_df):
+def eval(args, subject, model, tokenizer, dev_df, test_df):
     cors = []
     all_probs = []
-    answers = choices[:test_df.shape[1]-2]
+    answers = ["A", "B", "C", "D"]
 
     for i in range(test_df.shape[0]):
-        # get prompt and make sure it fits
+        # Build prompt
         k = args.ntrain
         prompt_end = format_example(test_df, i, include_answer=False)
         train_prompt = gen_prompt(dev_df, subject, k)
         prompt = train_prompt + prompt_end
 
+        # Crop prompt until it fits in the model's context window
         while crop(prompt) != prompt:
             k -= 1
             train_prompt = gen_prompt(dev_df, subject, k)
             prompt = train_prompt + prompt_end
 
-        label = test_df.iloc[i, test_df.shape[1]-1]
+        label = test_df.iloc[i, test_df.shape[1] - 1]
 
+        # Tokenize and get logits
         while True:
             try:
-                c = openai.Completion.create(
-                    engine=engine,
-                    prompt=prompt,
-                    max_tokens=1,
-                    logprobs=100,
-                    temperature=0,
-                    echo=True
-                )
+                input_ids = tokenizer(prompt, return_tensors="pt", truncation=True).input_ids
+                with torch.no_grad():
+                    outputs = model(input_ids)
+                logits = outputs.logits
                 break
-            except:
-                print("pausing")
+            except Exception as e:
+                print("Error:", e)
+                print("Retrying after pause...")
                 time.sleep(1)
                 continue
 
+        # Get logits for next token
+        next_token_logits = logits[0, -1, :]
         lprobs = []
         for ans in answers:
-            try:
-                lprobs.append(c["choices"][0]["logprobs"]["top_logprobs"][-1][" {}".format(ans)])
-            except:
-                print("Warning: {} not found. Artificially adding log prob of -100.".format(ans))
-                lprobs.append(-100)
-        pred = {0: "A", 1: "B", 2: "C", 3: "D"}[np.argmax(lprobs)]
+            ans_id = tokenizer(" " + ans, add_special_tokens=False).input_ids
+            if len(ans_id) == 1:
+                lprobs.append(next_token_logits[ans_id[0]].item())
+            else:
+                print(f"Warning: answer '{ans}' tokenized into multiple tokens. Using first token.")
+                lprobs.append(next_token_logits[ans_id[0]].item() if ans_id else -100)
+
+        pred_idx = int(np.argmax(lprobs))
+        pred = answers[pred_idx]
         probs = softmax(np.array(lprobs))
 
         cor = pred == label
@@ -93,45 +97,46 @@ def eval(args, subject, engine, dev_df, test_df):
         all_probs.append(probs)
 
     acc = np.mean(cors)
-    cors = np.array(cors)
-
-    all_probs = np.array(all_probs)
     print("Average accuracy {:.3f} - {}".format(acc, subject))
 
-    return cors, acc, all_probs
+    return np.array(cors), acc, np.array(all_probs)
 
-def main(args):
-    engines = args.engine
-    subjects = sorted([f.split("_test.csv")[0] for f in os.listdir(os.path.join(args.data_dir, "test")) if "_test.csv" in f])
+def main(args, model, tokenizer):
+    subjects = sorted([
+        f.split("_test.csv")[0]
+        for f in os.listdir(os.path.join(args.data_dir, "test"))
+        if "_test.csv" in f
+    ])
 
     if not os.path.exists(args.save_dir):
         os.mkdir(args.save_dir)
-    for engine in engines:
-        if not os.path.exists(os.path.join(args.save_dir, "results_{}".format(engine))):
-            os.mkdir(os.path.join(args.save_dir, "results_{}".format(engine)))
+
+    model_tag = args.model_name.replace("/", "_")  # For saving under safe folder name
+    result_dir = os.path.join(args.save_dir, f"results_{model_tag}")
+    if not os.path.exists(result_dir):
+        os.mkdir(result_dir)
 
     print(subjects)
     print(args)
 
-    for engine in engines:
-        print(engine)
-        all_cors = []
+    all_cors = []
 
-        for subject in subjects:
-            dev_df = pd.read_csv(os.path.join(args.data_dir, "dev", subject + "_dev.csv"), header=None)[:args.ntrain]
-            test_df = pd.read_csv(os.path.join(args.data_dir, "test", subject + "_test.csv"), header=None)
+    for subject in subjects:
+        print(f"Running subject: {subject}")
+        dev_df = pd.read_csv(os.path.join(args.data_dir, "dev", subject + "_dev.csv"), header=None)[:args.ntrain]
+        test_df = pd.read_csv(os.path.join(args.data_dir, "test", subject + "_test.csv"), header=None)
 
-            cors, acc, probs = eval(args, subject, engine, dev_df, test_df)
-            all_cors.append(cors)
+        cors, acc, probs = eval(args, subject, model, tokenizer, dev_df, test_df)
+        all_cors.append(cors)
 
-            test_df["{}_correct".format(engine)] = cors
-            for j in range(probs.shape[1]):
-                choice = choices[j]
-                test_df["{}_choice{}_probs".format(engine, choice)] = probs[:, j]
-            test_df.to_csv(os.path.join(args.save_dir, "results_{}".format(engine), "{}.csv".format(subject)), index=None)
+        test_df["correct"] = cors
+        for j, choice in enumerate(["A", "B", "C", "D"]):
+            test_df[f"choice_{choice}_prob"] = probs[:, j]
 
-        weighted_acc = np.mean(np.concatenate(all_cors))
-        print("Average accuracy: {:.3f}".format(weighted_acc))
+        test_df.to_csv(os.path.join(result_dir, f"{subject}.csv"), index=False)
+
+    weighted_acc = np.mean(np.concatenate(all_cors))
+    print("Weighted average accuracy across all subjects: {:.3f}".format(weighted_acc))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
