@@ -70,7 +70,8 @@ def eval(args, subject, model, tokenizer, dev_df, test_df):
         # Tokenize and get logits
         while True:
             try:
-                input_ids = tokenizer(prompt, return_tensors="pt", truncation=True).input_ids
+                device = model.device
+                input_ids = tokenizer(prompt, return_tensors="pt", truncation=True).input_ids.to(device)
                 with torch.no_grad():
                     outputs = model(input_ids)
                 logits = outputs.logits
