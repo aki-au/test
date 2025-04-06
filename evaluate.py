@@ -4,10 +4,14 @@ import os
 import numpy as np
 import pandas as pd
 import time
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+import time
+from scipy.special import softmax
 
 from crop import crop
 
-openai.api_key = "INSERTYOURKEYHERE"
+
 choices = ["A", "B", "C", "D"]
 
 
@@ -143,8 +147,7 @@ if __name__ == "__main__":
     parser.add_argument("--ntrain", "-k", type=int, default=5)
     parser.add_argument("--data_dir", "-d", type=str, default="data")
     parser.add_argument("--save_dir", "-s", type=str, default="results")
-    parser.add_argument("--engine", "-e", choices=["davinci", "curie", "babbage", "ada"],
-                        default=["davinci", "curie", "babbage", "ada"], nargs="+")
+    parser.add_argument("--model", "-m", type=str)
     args = parser.parse_args()
     main(args)
 
