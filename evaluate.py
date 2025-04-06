@@ -105,7 +105,13 @@ def eval(args, subject, model, tokenizer, dev_df, test_df):
 
     return np.array(cors), acc, np.array(all_probs)
 
-def main(args, model, tokenizer):
+def main(args):
+    tokenizer = AutoTokenizer.from_pretrained(args.model)
+    model = AutoModelForCausalLM.from_pretrained(
+        args.model,
+        torch_dtype="auto",
+        device_map="auto"
+    )
     subjects = sorted([
         f.split("_test.csv")[0]
         for f in os.listdir(os.path.join(args.data_dir, "test"))
@@ -115,7 +121,7 @@ def main(args, model, tokenizer):
     if not os.path.exists(args.save_dir):
         os.mkdir(args.save_dir)
 
-    model_tag = args.model_name.replace("/", "_")  # For saving under safe folder name
+    model_tag = args.model.replace("/", "_")  # For saving under safe folder name
     result_dir = os.path.join(args.save_dir, f"results_{model_tag}")
     if not os.path.exists(result_dir):
         os.mkdir(result_dir)
