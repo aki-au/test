@@ -86,6 +86,8 @@ def eval(args, subject, model, tokenizer, dev_df, test_df):
         next_token_logits = logits[0, -1, :]
         lprobs = []
         for ans in answers:
+            # print(f"'{ans}':", tokenizer(ans, add_special_tokens=False).input_ids)
+            # print(f"' {ans}':", tokenizer(" " + ans, add_special_tokens=False).input_ids)
             ans_id = tokenizer(" " + ans, add_special_tokens=False).input_ids
             if len(ans_id) == 1:
                 lprobs.append(next_token_logits[ans_id[0]].item())
@@ -96,6 +98,7 @@ def eval(args, subject, model, tokenizer, dev_df, test_df):
         pred_idx = int(np.argmax(lprobs))
         pred = answers[pred_idx]
         probs = softmax(np.array(lprobs))
+    
 
         cor = pred == label
         cors.append(cor)
@@ -107,12 +110,16 @@ def eval(args, subject, model, tokenizer, dev_df, test_df):
     return np.array(cors), acc, np.array(all_probs)
 
 def main(args):
-    tokenizer = AutoTokenizer.from_pretrained(args.model)
+    tokenizer = AutoTokenizer.from_pretrained(
+            args.model,
+            use_fast=True,
+            add_prefix_space=True
+        )
     model = AutoModelForCausalLM.from_pretrained(
-        args.model,
-        torch_dtype="auto",
-        device_map="auto"
-    )
+            args.model,
+            torch_dtype="auto",
+            device_map="auto"
+        )
     subjects = sorted([
         f.split("_test.csv")[0]
         for f in os.listdir(os.path.join(args.data_dir, "test"))
