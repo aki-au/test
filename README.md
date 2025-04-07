@@ -11,7 +11,7 @@ Whether you're testing your favorite LLM or writing a Medium post while Modern F
 **MMLU (Massive Multitask Language Understanding)** is a benchmark designed to test language models across **57 subjects**
 
 For a deep dive, check out my blog post:  
-📖 [Paper Breakdown #1 – MMLU: LLMs Have Exams Too!](https://medium.com/@alakarthika01/paper-breakdown-1-mmlu-llms-have-exams-too-a-post-on-benchmarking-a66630dfd2a6)
+[Paper Breakdown #1 – MMLU: LLMs Have Exams Too!](https://medium.com/@alakarthika01/paper-breakdown-1-mmlu-llms-have-exams-too-a-post-on-benchmarking-a66630dfd2a6)
 
 ---
 
@@ -27,11 +27,11 @@ For a deep dive, check out my blog post:
 ## [Quickstart is in the Colab notebook](https://colab.research.google.com/drive/1gHRLSgwstosutmww3onQlimSYpJlT8WA?usp=sharing)
 
 
-   ✅ You can swap in any Hugging Face causal LM (`AutoModelForCausalLM` compatible).
+   You can swap in any Hugging Face causal LM (`AutoModelForCausalLM` compatible).
 
 ---
 
-## 🧪 Models Used in My Tests
+## Models Used in My Tests
 
 | Model                        | Description                            |
 |-----------------------------|----------------------------------------|
@@ -47,7 +47,7 @@ For a deep dive, check out my blog post:
 
 ---
 
-## 🛠Credits & References
+## Credits & References
 
 - [Original MMLU Benchmark](https://github.com/hendrycks/test)  
 - [LiuYiuWei LLM Evaluation](https://github.com/LiuYiuWei/LLM-Evaluation)  
