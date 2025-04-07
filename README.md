@@ -24,7 +24,7 @@ For a deep dive, check out my blog post:
 
 ---
 
-## 🚀 Quickstart is in the Colab notebook (https://colab.research.google.com/drive/1gHRLSgwstosutmww3onQlimSYpJlT8WA?usp=sharing)
+## [Quickstart is in the Colab notebook](https://colab.research.google.com/drive/1gHRLSgwstosutmww3onQlimSYpJlT8WA?usp=sharing)
 
 
    ✅ You can swap in any Hugging Face causal LM (`AutoModelForCausalLM` compatible).
@@ -38,7 +38,7 @@ For a deep dive, check out my blog post:
 | `google/gemma-3b-it`        | General-purpose instruction-tuned LLM  |
 | `stabilityai/stable-code-3b` | Code-first model, tested just for fun  |
 
-Results (https://drive.google.com/drive/folders/19IihpcyHIioSxj_oA38nVrX4S-ubKWX1?usp=sharing)
+[Results](https://drive.google.com/drive/folders/19IihpcyHIioSxj_oA38nVrX4S-ubKWX1?usp=sharing)
 ---
 
 ## Subjects Tested (20)
