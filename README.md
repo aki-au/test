@@ -2,7 +2,7 @@
 
 **Welcome!** This repo is a modified fork of the original [MMLU benchmark](https://github.com/hendrycks/test), updated to support open-source Hugging Face models like `google/gemma-3b-it` and `stabilityai/stable-code-3b`.
 
-Whether you're testing your favorite LLM or writing a Medium post while Modern Family plays in the background and do some benchmarking, this repo makes it easier to evaluate how well these models perform on knowledge-intensive tasks.
+
 
 ---
 
